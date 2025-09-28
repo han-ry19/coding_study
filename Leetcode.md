@@ -275,7 +275,7 @@ public:
 
 最后，总的时间复杂度为$O(n^2)$。
 
-## Leetcode 812 最大三角形面积 && 三角形面积求法 && Andrew算法和凸包
+## Leetcode 812 最大三角形面积 && 三角形面积求法 && Andrew算法和凸包、向量的外积运算
 
 题目是让我们求三个点之间组成三角形面积的最大值，给了任意三个点坐标求出面积最大值的公式可以用以下形式表示：
 $ S_{\triangle ABC}=\frac{1}{2}|(x_1y_2+x_2y_3+x_3y_1)-(y_1x_2+y_2x_3+y_3x_1)| $
@@ -287,7 +287,47 @@ $ S_{\triangle ABC}=\frac{1}{2}|(x_1y_2+x_2y_3+x_3y_1)-(y_1x_2+y_2x_3+y_3x_1)| $
 
 具体求解需要用到Andrew算法，这个我们明天在研究。
 
-凸包
+具体求解需要用到Andrew算法，这个我们明天研究。
+
+好，今天我们彻底解决凸包问题。
+Andrew算法又被称为单调链算法，其实就是一种贪心的求凸包算法。简单来说，将平面上的所有点按照x轴坐标大小从小到大排序，若x轴大小一样则按y轴大小从小到大排序，这样排序的点集最小值点和最大值点分别是最左下角和最右上角的点,这两个点是必然在凸包内的，我们把按逆时针顺序从最小点到最大点的凸包成为下凸包，反之成为上凸包，Andrew算法就是分别求这两个凸包的过程。
+
+排序可以用以下方法定义：
+```cpp
+struct Point {
+    int x,y;
+    bool operator== const (const Point & p)
+    {
+        return (x==p.x)&&(y==p.y);
+    }
+}
+
+vector<Point> points;
+
+sort(points.begin(),points.end(),[](const Point &a, const Point &b){
+    return (a.x!=b.x) ? (a.x < b.x) : (a.y < b.y); //sort要求使用<
+})
+
+
+```
+
+向量外积
+
+在三维空间中，两个向量$\mathbf{A}(a_x,a_y,a_z), \mathbf{B}(b_x,b_y,b_z)$的外积被定义为：
+$$\mathbf{A} \times \mathbf{B} =
+\begin{vmatrix} 
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+a_x & a_y & a_z \\
+b_x & b_y & b_z
+\end{vmatrix}
+$$
+其中$\mathbf{i} ,\mathbf{j} ,\mathbf{k} $分别对应平行于x、y、z轴的单位向量。通过展开计算可以得出：
+$$\mathbf{A} \times \mathbf{B} =(a_yb_z-a_zb_y,a_zb_x-a_xb_z,a_xb_y-a_yb_x)$$
+
+这个向量的方向为根据右手定则向量AB的法向量方向，模长为$||\mathbf{A}|||\mathbf{B}||sin\theta$，其中$\theta$为向量AB夹角大小，即为AB围成的平行四边形的面积大小。
+
+当
+
 
 ## Leetcode 976 三角形的最大周长 && 简单贪心
 
