@@ -285,7 +285,6 @@ $ S_{\triangle ABC}=\frac{1}{2}|(x_1y_2+x_2y_3+x_3y_1)-(y_1x_2+y_2x_3+y_3x_1)| $
 
 不过，当数据量变大的时候，这种方法就不合适了，然而这个问题要想解决必须求出组成这些点集合的凸包的点集，我们可以证明只有在凸包上的点组成的三角形才是面积最大的，否则固定另外两个点，在土包上必然能找到一个高更高的点。
 
-具体求解需要用到Andrew算法，这个我们明天在研究。
 
 具体求解需要用到Andrew算法，这个我们明天研究。
 
@@ -326,8 +325,84 @@ $$\mathbf{A} \times \mathbf{B} =(a_yb_z-a_zb_y,a_zb_x-a_xb_z,a_xb_y-a_yb_x)$$
 
 这个向量的方向为根据右手定则向量AB的法向量方向，模长为$||\mathbf{A}|||\mathbf{B}||sin\theta$，其中$\theta$为向量AB夹角大小，即为AB围成的平行四边形的面积大小。
 
-当
+当我们把讨论的对象限定为二位平面上的一组向量时，这个方法便可以指示两个向量之间的方向。
+$\overrightarrow{AB} \times \overrightarrow{AC} > 0$ --> AB到AC是逆时针方向
+若为0 则说明ABC三点共线 若小于0 则说明顺时针方向。
 
+Andrew算法就是贪心地维护一个类似栈的结构，其中新待加入的点只要和栈顶的两个点组成的三点结构的CROSS(向量外积)<0，则说明AB到AC是逆时针方向的，说明B到C是左转，能维持凸包结构。若取等号，则该凸包可以包括凸包边上的点，而不取等号则不包括边上的点。
+
+在以下情况时，新点将被push进栈：
+(1) 栈顶两点和新点的CROSS >(有时候取=)0.
+(2) 栈内元素不足2.
+
+当栈顶两点和新点的CROSS不满足条件时，栈顶元素将被pop出去，并重复执行以上操作，直到所有的点都已经完成操作。可以证明，至少有两个点时，左下和右上的两个点至少都会被包含在下凸包中。
+
+构建完下凸包后，我们从右上角的点开始构建上凸包，但此时方向是按从大到小遍历的，并且CROSS的条件改为小于或等于0.
+
+CROSS即为求向量AB和AC的外积的符号。
+
+代码如下：
+
+```cpp
+struct Point {
+    int x, y;
+    bool operator==(const Point &p) const {
+        return x == p.x && y == p.y;
+    }
+};
+
+// 比较函数：先按 x 升序，若相等则按 y 升序
+bool cmp(const Point &a, const Point &b) {
+    return (a.x == b.x) ? (a.y < b.y) : (a.x < b.x);
+}
+
+// 叉积：判断 A->B->C 的转向
+long long cross(const Point &A, const Point &B, const Point &C) {
+    return 1LL * (B.x - A.x) * (C.y - A.y) - 1LL * (B.y - A.y) * (C.x - A.x);
+}
+
+vector<Point> convexHull(vector<Point> &pts) {
+    int n = pts.size();
+    if (n <= 1) return pts;
+
+    sort(pts.begin(), pts.end(), cmp);
+    vector<Point> hull;
+
+    // 构建下凸包
+    for (auto &p : pts) {
+        while (hull.size() >= 2 && cross(hull[hull.size()-2], hull.back(), p) <= 0) {
+            hull.pop_back();
+        }
+        hull.push_back(p);
+    }
+
+    // 构建上凸包
+    int lowerSize = hull.size();
+    for (int i = n - 2; i >= 0; i--) {
+        while (hull.size() > lowerSize && cross(hull[hull.size()-2], hull.back(), pts[i]) <= 0) {
+            hull.pop_back();
+        }
+        hull.push_back(pts[i]);
+    }
+
+    // 去掉最后一个点（起点重复）
+    hull.pop_back();
+
+    return hull;
+}
+```
+由于除了第一个点，每个点最多进栈出栈一次，所以遍历过程的时间复杂度为$O(n)$
+加上排序所需的时间，总时间复杂度为$O(nlogn)$。
+
+这道题还没有结束，我们求出了凸包以后又怎么求得最大三角形的面积呢？
+
+利用凸包+旋转卡壳即可：
+
+我们依然遍历i、j，可以观察到ij固定时，k只要为三角形面积的极大值点就为最大值点（否则不满足凸包），此外k点也是随着j的增大而增大的，这也是因为凸包的凸多边形性质。因为往回退高必然会变小。
+
+这样，我们只需要遍历ij两层循环，利用双指针即可。这样解答的时间复杂度为$O(n^2)$.
+
+(这是一道真正意义上的困难题)
 
 ## Leetcode 976 三角形的最大周长 && 简单贪心
 
