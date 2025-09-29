@@ -326,7 +326,7 @@ $$\mathbf{A} \times \mathbf{B} =(a_yb_z-a_zb_y,a_zb_x-a_xb_z,a_xb_y-a_yb_x)$$
 这个向量的方向为根据右手定则向量AB的法向量方向，模长为$||\mathbf{A}|||\mathbf{B}||sin\theta$，其中$\theta$为向量AB夹角大小，即为AB围成的平行四边形的面积大小。
 
 当我们把讨论的对象限定为二位平面上的一组向量时，这个方法便可以指示两个向量之间的方向。
-$\overrightarrow{AB} \times \overrightarrow{AC} > 0$ --> AB到AC是逆时针方向
+$\overrightarrow{AB} \times \overrightarrow{AC} > 0  => x_{AB}y_{AC}-x_{AC}y_{AB} > 0  => (B_x - A_x)(C_y-A_y)-(C_x-A_x)(B_y-A_y)>0 =>$  AB到AC是逆时针方向
 若为0 则说明ABC三点共线 若小于0 则说明顺时针方向。
 
 Andrew算法就是贪心地维护一个类似栈的结构，其中新待加入的点只要和栈顶的两个点组成的三点结构的CROSS(向量外积)<0，则说明AB到AC是逆时针方向的，说明B到C是左转，能维持凸包结构。若取等号，则该凸包可以包括凸包边上的点，而不取等号则不包括边上的点。
@@ -370,7 +370,7 @@ vector<Point> convexHull(vector<Point> &pts) {
 
     // 构建下凸包
     for (auto &p : pts) {
-        while (hull.size() >= 2 && cross(hull[hull.size()-2], hull.back(), p) <= 0) {
+        while (hull.size() > 1 && cross(hull[hull.size()-2], hull.back(), p) <= 0) {
             hull.pop_back();
         }
         hull.push_back(p);
@@ -412,4 +412,72 @@ vector<Point> convexHull(vector<Point> &pts) {
 
 这样的算法复杂度为$O(nlogn)$。
 
+## Leetcode 1039 多边形三角剖分的最低得分 && 区间DP
+
+这道题是一个典型的区间DP问题。区间 DP (Interval DP)：
+是一类动态规划问题，状态表示的是一个 区间 [l, r] 上的最优解（或某种值）。
+通常用在：
+
+括号化问题
+
+多边形划分问题
+
+矩阵链乘法
+
+石子合并、合并果子
+
+最小三角剖分
+
+其核心特征：
+
+问题输入有明显的区间结构（顺序固定，不能随便打乱）。
+
+需要考虑如何把一个区间 [l, r] 分成若干子区间 [l, k] 和 [k, r]。
+
+状态转移就是在不同的分割点 k 之间取最优。
+
+区间DP的状态转移方程为：$$dp[l][r] = min_{l < k < r} ( dp[l][k] + dp[k][r] + cost(l,k,r) )$$
+
+对这道题而言，dp[a][b]表示以a为起始下标，b为最终下标的这个多边形中三角形剖分之和的最小值。
+
+因此，状态转移方程为：
+$$ dp[l][r] = min_{l < k < r} ( dp[l][k] + dp[k][r] + values[l] * values[k] * values[r] ) $$
+
+我们对dp函数加一个特判，保证l+1=\=r时返回0，l+2=\=r时返回三边之积即可，同时用一个dp数组保存状态，不至于无穷递归导致指数爆炸。
+
+最终的代码如下：
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> dp;
+
+    int minSc(const vector<int> & values, int f, int l) {
+        if (l - f == 1) return 0; // 两点不能成三角形
+        if (l - f == 2) return values[f] * values[f+1] * values[l]; // 三点构成一个三角形
+
+        if (dp[f][l] != -1) return dp[f][l];
+
+        int res = INT_MAX;
+        for (int k = f+1; k < l; k++) {
+            res = min(res, minSc(values, f, k) + values[f]*values[k]*values[l] + minSc(values, k, l));
+        }
+        return dp[f][l] = res;
+    }
+
+    int minScoreTriangulation(vector<int>& values) {
+        int n = values.size();
+        dp =  vector<vector<int>>(n, vector<int>(n, -1));
+        return minSc(values, 0, n-1);
+    }
+};
+
+```
+
 ## Leetcode 88 合并两个有序数组 && 归并排序
+
+其实，这个问题就是Mergesort中关键操作Merge的变体算法，只不过两个数组不在连续内存空间中。
+标准的做法是双指针，分别记录每个数组中当前扫描到的下标并将其填入其中即可。如果从小到大扫描，那么需要额外开一个数组保存第一个数组的原始数值。
+如果反过来从最大的数值遍历，则不需要。
+
+但对于Mergesort中的Merge而言，则依然需要额外开一个空间进行保存，这是因为，Mergesort中两个数组的内存空间是连续的，不存在像这道题一样后面填充0的部分，如果不额外开辟空间会导致数据覆盖。
