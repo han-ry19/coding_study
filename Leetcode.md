@@ -1016,3 +1016,80 @@ parent/pre[i] 表示下标为i的节点的前驱。
         return 0;
     }
 ```
+
+## Leetcode 1488 避免洪水泛滥 && 有序集合set和map
+
+这道题需要我们贪心地找到所有在洪水泛滥之前可以抽空的天数，并将这一天拿来抽水。可以将所有的不下雨（可用于抽水的天数）的日子都利用一个有序的集合Set进行排序，再利用其lower_bound和upper_bound等接口实现贪心查找即可。
+
+Set和Map是C++容器中一类拥有自动排序功能（但不能拥有重复元素），其主要用到的接口和其他访问数据的结构类似：
+
+```cpp
+std::set
+begin() end()  rbegin() rend()
+empty() size()  max_size() clear()
+insert(value) emplace(args...) erase(it/key)
+find(key) count(key) lower_bound(key) upper_bound(key)
+equal_range(key) //返回一个{lower_bound,upperbound} pair
+swap(other) 
+key_comp() //返回用于排序 key 的比较函数
+value_comp() //返回用于排序 value 的比较函数
+```
+
+```cpp
+std::map
+operator[](key) at(key) //若不存在，报异常
+insert({key, value})  emplace(key, value)
+
+```
+
+关键点在于，set可以通过lower_bound和upper_bound以及find实现堆某个元素的高效精确/模糊查找（由于set和map底层是红黑树实现的，时间复杂度为O(logn)
+
+multiset和multimap是和set/map的可重复元素版本，也位于头文件\<set\>和\<map\>之中。
+
+## Leetcode 2 两数相加 && 链表
+
+本质上就是一个模拟竖式相加的过程，本质上就是考虑每一位是否有进位，由于加法的进位不会传递两次，只需要每次分别判定即可。
+
+链表可以用一个链表指针next快速指向下一个节点，因此顺序访问速度很快。
+
+## Leetcode 2300 咒语和药水的成功对数
+
+本质上，这道题是需要你进行一次排序，然后对每个对应的spells值找出其在vector中的相对顺位。这个过程可以通过迭代器之间的计算轻松完成。利用lower_bound函数返回迭代器，然后再利用迭代器的运算即可求出对应的位置。
+
+## Leetcode 3494 酿造药水需要的最少总时间 && 流水线DP
+
+这道题需要我们按照流水线处理一些任务，但这些任务之间必须连续完成，因此和传统的流水线不完全一样。
+
+对每个问题而言，它可以开始执行的时间为$$max(这一轮上个任务完成的最早时间，这个流水线空缺出来的最早时间)$$
+
+因此我们需要一个endTime数组来记录上一轮的这个任务什么时候结束
+
+而对于每一次执行的过程而言，可以利用一个cur表示当前已经执行的时间，利用上述逻辑对这个任务所需要的最短时间进行更新。
+
+最终，我们确定了最终更新的时间以后再把时间反向推回去即可。
+
+完整代码如下：
+
+```cpp
+class Solution {
+public:
+    long long minTime(vector<int>& skill, vector<int>& mana) {
+        using ll = long long;
+        int n = skill.size();
+        vector<ll> endTime = vector<ll>(n,0); //上次工作完成的时间
+        for(int i=0;i<mana.size();i++)
+        {
+            ll cur = 0;
+            for(int j=0;j<n;j++)
+            {
+                cur = max(cur,endTime[j]) + 1LL * skill[j]* mana[i];
+            }
+            endTime[n-1] = cur;
+            for(int k=n-2;k>=0;k--)
+                endTime[k] = endTime[k+1] - 1LL * skill[k+1] * mana[i];
+        }
+
+        return endTime[n-1];
+    }
+};
+```
