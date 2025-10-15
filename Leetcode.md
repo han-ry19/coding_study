@@ -482,12 +482,641 @@ public:
 
 但对于Mergesort中的Merge而言，则依然需要额外开一个空间进行保存，这是因为，Mergesort中两个数组的内存空间是连续的，不存在像这道题一样后面填充0的部分，如果不额外开辟空间会导致数据覆盖。
 
-## Leetcode 2221 数组的三角和 && 组合数的计算
 
-这道题只需要用一个数组存储上一轮的数据，再直接进行模拟计算即可，本身没有难度。
+## Leetcode 2221 数组的三角和 && 杨辉三角
 
-但是观察到其实每个数字重复出现的数字，等于杨辉三角第n层这个数字出现的次数，也就是组合数。求完对应的阶乘之后继续计算即可。时间复杂度可能低一些，但由于容易溢出不推荐。
+这道题本质上就是一个模拟题，直接模拟累加就行了。
+当然，也可以利用数学观察发现，其实结果中第i个系数的和就是$$\binom{n}{k}=\frac{n!}{k!(n-k)!}$$
+
+只要利用快速算阶乘即可。
+
 
 ## Leetcode 15 三数之和 && 双指针进阶
 
-本题本质上就是，对每个固定的数i，求
+本题本质上就是，对每个固定的数i，求其他所有的两个数之和为-i的所有组合。我们可以首先对数组进行排序，然后固定一个数，另外一个数从最大值开始搜索。由于固定的那个数是从小到大的，所以另一个数也不可能回退，这样每个数字都只需要寻找一次，把时间复杂度从$O(n^3)$优化到了$O(n^2)$。
+
+## Leetcode 1518 换水问题
+
+小学奥赛题，经典的空瓶换水问题，模拟或者直接用数学求解即可。不卡时间，没难度。
+
+## Leetcode 3100 换水问题II
+
+本质上就是上一题的等差数列版本，没有什么大的区别。
+
+## Leetcode 509 斐波那契数 && 简单DP
+
+如果本题利用递归方法会导致时间复杂度为指数级别。可以直接改写为迭代方法，利用两个数每次保存上次的结果，在下一次运算中用上即可。
+
+## Leetcode 1137 第N个泰波那契数
+
+本题本质上和上一道题是一样的。
+
+## Leetcode 746 使用最小花费爬楼梯
+
+简单的动态规划，需要注意并不是到达最后一个阶梯的值，而是爬上去的值，而爬上去可以从倒数第一个或倒数第二个开始，需要去两者最小值。
+
+## Leetcode 42 接雨水
+
+这是第一道困难题，本质上也是一个动态规划的问题，只要想清楚思路就很简单了。对于每个坐标而言，其能接的水的体积为max(min(左边墙的最大值，右边墙的最大值)-height,0)。
+
+这样，只需要递归地计算每个点的leftMax和rightMax即可。
+
+## Leetcode 407 接雨水II && Dijstra算法 && Priority_queue
+
+本质上，这道题就是接雨水的3D形式，但做法却完全不一样。在2D的接雨水的场景里，雨水只能向左右两个方向流动，因此只需要考虑两边的最大高度即可。但问题是，在3D的场景中，水流可以绕过围墙的方向进行流动，而不能仅仅观察上下左右的围墙最大值简单决定，这就是3D，因此，需要找到一个区域，该区域内被围墙围着，外围围墙的最低高度才是这片区域能装载雨水的最大值。
+
+很显然，所有的最外层节点都不能装水（因为它们的邻居之中有高度为0的节点），因此首先把所有的外部节点加入小根堆之中。
+从中选取高度最小的那个 将其周围未被访问邻居的高度更新为max(自身高度，该小节点的水位)
+
+如果该邻居的水位更低 那么说明这个格子被装了水 将装了的水记录到结果中即可。
+
+由于每个节点都会入堆一次出堆一次，最终的时间复杂度为O(mnlogmn)。
+
+其实这个算法很像单源非负边最短路问题中的Dijkstra算法，该算法也是维护一个pq，每次考察堆中离源点最近的边，将其周围未被更新过的邻居更新最近距离并加入堆中。
+
+解决这个问题涉及到C++的一个常见容器priority_queue（优先级队列，即堆）。堆的特性与栈相似，但不同点在于堆顶总是优先级最高的点，因此堆可以保证优先级最高的点先出堆。出堆、入堆的时间复杂度都为$O(logn)$。
+
+priority_queue位于头文件\<queue\>中。一般来说，还可以引入头文件\<functional\>，该文件中有less<> greater<>两类函数可以规定小顶堆和大顶堆。一般来说，less对应的是大顶堆，而greater对应的是小顶堆。（这点与sort函数不同）
+
+priority_queue的常见接口如下：
+```cpp
+// 默认是大根堆（最大值在顶部）
+std::priority_queue<int> pq_max;
+
+// 小根堆（最小值在顶部）
+std::priority_queue<int, std::vector<int>, std::greater<int>> pq_min;
+//第一个模板参数：存储类型（如 int、pair<int,int> 等）
+
+//第二个模板参数：底层容器类型（通常是 vector 或 deque）
+
+//第三个模板参数：比较函数（默认 less<T> → 大根堆；greater<T> → 小根堆）
+pq.push(x) 插入元素x
+pq.pop() 删除堆顶元素
+pq.top() 访问堆顶元素
+pq.empty() 判断堆是否为空
+pq.size() 返回当前元素的个数
+
+```
+
+显然，pq的建立需要有一个比较函数来完成对元素的比较，对于自定义数据结构而言需要自定义一套新的比较函数。通常可以采用以下方式：
+
+1.lambda表达式+decltype
+```cpp
+auto cmp = [](pair<int,int> a, pair<int,int> b) {
+    return a.second > b.second; // 按 second 从小到大
+};
+priority_queue<pair<int,int>, vector<pair<int,int>>, decltype(cmp)> pq(cmp);
+
+pq.push({1,5});
+pq.push({2,2});
+pq.push({1,3});
+
+while(!pq.empty()) {
+    auto p = pq.top(); pq.pop();
+    cout << "(" << p.first << "," << p.second << ") ";
+}
+
+```
+注意这里不能直接像sort函数一样直接返回lambda表达式，因为pq需要的是一个类型。
+
+2.利用struct表示新的比较函数
+```cpp
+struct cmp {
+    bool operator()(const std::pair<int,int>& a, const std::pair<int,int>& b) {
+        return a.second > b.second; // second 小的优先
+    }
+};
+
+std::priority_queue<std::pair<int,int>, std::vector<std::pair<int,int>>, cmp> pq;
+
+```
+
+这道题还有一个优化方法，这个优化方法对于二维数组而言也非常常见：
+与其将二维数组存在一个真正的二维数组里，不如用i*n+j表示其坐标然后存在一维数组里，这样可以省去许多麻烦的构造。
+
+完整标答代码如下:
+```cpp
+class Solution {
+public:
+
+    int trapRainWater(vector<vector<int>>& heightMap) {
+        int m = heightMap.size();
+        int n = heightMap[0].size();
+        vector<bool> visited(m*n,false);
+        using Node = pair<int,int>; //第一位表示高度,i*n+j表示节点位置
+        auto grt = [](const Node &a, const Node &b){
+            return a.first > b.first;
+        };
+        priority_queue<Node, vector<Node>, decltype(grt)> pq; //小顶堆
+        //周围一圈先入队
+        for(int i=0;i<m;i++)
+        {
+            if(!visited[i*n])
+            {
+                visited[i*n]=true;
+                pq.push(make_pair(heightMap[i][0],i*n));
+            }
+            if(!visited[i*n+n-1])
+            {
+                visited[i*n+n-1]=true;
+                pq.push(make_pair(heightMap[i][n-1],i*n+n-1));
+            }
+        }
+        for(int j=0;j<n;j++)
+        {
+            if(!visited[j])
+            {
+                visited[j]=true;
+                pq.push(make_pair(heightMap[0][j],j));
+            }
+            if(!visited[n*(m-1)+j])
+            {
+                visited[n*(m-1)+j]=true;
+                pq.push(make_pair(heightMap[m-1][j],n*(m-1)+j));
+            }
+        }
+        int result = 0;
+        while(!pq.empty())
+        {
+            Node tp = pq.top();
+            pq.pop();
+            int tp_h = tp.first;
+            int tp_l = tp.second;
+            // 更新周围的四个节点（若有）
+            int x = tp_l/n;
+            int y = tp_l%n;
+            if(x-1>=0 && !visited[(x-1)*n+y])
+            {
+                if(tp_h>heightMap[x-1][y])
+                {
+                    result+=tp_h-heightMap[x-1][y];
+                    pq.push(make_pair(tp_h,(x-1)*n+y));
+                }
+                else
+                    pq.push(make_pair(heightMap[x-1][y],(x-1)*n+y));
+                visited[(x-1)*n+y]=true;
+            }
+            if(x+1<m && !visited[(x+1)*n+y])
+            {
+                if(tp_h>heightMap[x+1][y])
+                {
+                    result+=tp_h-heightMap[x+1][y];
+                    pq.push(make_pair(tp_h,(x+1)*n+y));
+                }
+                else
+                    pq.push(make_pair(heightMap[x+1][y],(x+1)*n+y));
+                visited[(x+1)*n+y]=true;
+            }
+            if(y-1>=0 && !visited[x*n+y-1])
+            {
+                if(tp_h>heightMap[x][y-1])
+                {
+                    result+=tp_h-heightMap[x][y-1];
+                    pq.push(make_pair(tp_h,(x*n+y-1)));
+                }
+                else
+                    pq.push(make_pair(heightMap[x][y-1],x*n+y-1));
+                visited[x*n+y-1]=true;
+            }
+            if(y+1<n && !visited[x*n+y+1])
+            {
+                if(tp_h>heightMap[x][y+1])
+                {
+                    result+=tp_h-heightMap[x][y+1];
+                    pq.push(make_pair(tp_h,(x*n+y+1)));
+                }
+                else
+                    pq.push(make_pair(heightMap[x][y+1],x*n+y+1));
+                visited[x*n+y+1]=true;
+            }
+        }
+        return result;
+    }
+};
+```
+
+此外还有一个优化方式，用数组表示方向，简单来说有两种实现方式：
+第一种：单纯的上下左右
+```cpp
+    int direction[4][2] = {{-1,0},{1,0},{0,1},{0,-1}};
+
+    int dir[5] = {0, 1, 0, -1, 0}; // 5个数，方便成对取
+    for (int k = 0; k < 4; k++) {
+        int nx = x + dir[k];
+        int ny = y + dir[k + 1];
+        // 四次循环分别是 (0,1), (1,0), (0,-1), (-1,0)
+    }
+```
+## Leetcode 11 盛最多水的容器
+
+这道题是一个经典的双指针问题，其实可以通过以下的方式理解：
+将两个指针固定在0和n-1两边，我们只需要将两端高度更矮的那个向内移动直到两个游标互相触碰，不能再迭代即可。
+因为，由于盛水的体积由更低的高度木板和底边距离长度决定，因此向内移动更高的那个永远都不可能再增大容器的容积了（因为矮的那边不会变高，矮边最多等于另一边的高度，而底边的距离是不断缩小的），因此我们不需要遍历每种组合情况就可以计算出盛最多水的容器的组合方式，最多移动n次。
+
+## Leetcode 417 太平洋大西洋水流问题 && BFS/DFS && queue和deque
+
+C++的queue是一种先进先出FIFO的数据结构，位于头文件\<queue\>中，常用于BFS等算法中。
+其实与stack的区别就在于queue可以从头尾进行访问，因此支持front()和end()两个不同的接口，而pop()是删掉队首的元素。
+
+deque的全称为double-ended queue（双端队列），位于头文件\<deque\>中与vector不同，是一个可以从两端高效插入和删除的队列。相较于vector只支持push_back，deque同时还支持push_front()操作，因此也能访问front()和back()，同时也支持[]下标进行访问。
+
+这道题的思路很简单，要么从每个点出发进行DFS/BFS观察是否能达到两边边界，但这个需要对每个点做一次BFS/DFS因此复杂度较高。
+我们反过来想，由位置关系天然确定的可以流入太平洋/大西洋的点显然位于边界，而且对于其他能够到达这些点的点来说，最终也一定是通过判断能否流入这些点来进行判断的。
+因此我们可以反过来想，让水往高处“流动”，反向追溯所有有可能流入边界的数据点即可。这样只需要进行两次BFS。
+
+我们将所有左上边界的点加入BFS的queue中，并做BFS追溯所有可能流入这两个边界的数据点，只有当临近节点的高度值大于等于本节点的数值，说明水能从临近节点流入。
+按照这样的方式再对右下边界做一次即可。
+
+BFS是广度优先搜索的简写，简单来说就是维护一个队列，每次把队首未访问（并且满足条件可达）的邻居元素加入队列，遍历完队首后将队首弹出并依次遍历其他的元素即可。因此维护一个queue的数据结构是必要的。
+
+DFS是深度优先搜索的缩写，简单来说就是对某个节点的每个邻居使用DFS，递归访问。这样的访问模式会一遍一遍地深入和回溯，我们需要对每个节点进行标记（是否已经访问），若已经访问则不需要重复访问，最终也可以遍历每个节点。
+本质上DFS的算法是基于栈的，而过深的递归深度会导致stack overflow报错，因此我们也可以手动维护一个栈进行迭代的DFS操作，示例代码如下：
+
+```cpp
+void dfs_iterative(int x, int y, vector<vector<int>>& grid, vector<vector<bool>>& visited) {
+    int m = grid.size(), n = grid[0].size();
+    stack<pair<int,int>> st;
+    st.push({x, y});
+    visited[x][y] = true;
+
+    int dx[4] = {1, -1, 0, 0};
+    int dy[4] = {0, 0, 1, -1};
+
+    while (!st.empty()) {
+        auto [cx, cy] = st.top();
+        st.pop();
+
+        for (int d = 0; d < 4; ++d) {
+            int nx = cx + dx[d];
+            int ny = cy + dy[d];
+            if (nx >= 0 && ny >= 0 && nx < m && ny < n && grid[nx][ny] == 1 && !visited[nx][ny]) {
+                visited[nx][ny] = true;
+                st.push({nx, ny});
+            }
+        }
+    }
+}
+
+```
+
+## Leetcode 778 水位上升的泳池中游泳 && 并查集 && Dijkstra算法变体 && 二分查找
+
+这道题需要我们找到在水位上升的泳池中，能够连通起始点和终点的路径中最小的最大水位是多少，可以看作一个路径的最小化最大值的问题，考虑用类Dijkstra方法解决。每次从堆里权重最小的值的点开始扩展，更新周围可达的所有节点的cost，如果目标节点的高度小于当前节点的cost说明这个节点至少也要cost才能访问到，将其cost更新为本节点的cost，反之则需要等到其高度对应的时间才能访问。
+
+类Dijkstra方法可以解决以下类型的问题：
+实际上，Dijkstra 算法是一大类“逐步扩展最优状态”的最短路径问题的模板。
+我们可以从“本质特征”出发，来识别哪些问题能归为它的变体。
+
+🧠 一、Dijkstra 的本质思想
+
+Dijkstra 的核心是：
+
+在一张图上，从起点出发，每次扩展当前“代价”最小的点，
+并利用该点去更新相邻点的最优代价。
+一旦一个点的最优代价确定，它就不会再被更优路径更新。
+
+因此它适用于：
+
+图的边权 非负；
+
+目标是找到某种“代价最小”的路径；
+
+代价满足 单调性（即从起点到某节点的最优代价不会因为路径延长而变小）。
+
+⚙️ 二、可视作 Dijkstra 变体的问题特征
+
+满足以下几个特征的，都可以归入 Dijkstra 思想范畴：
+
+特征	解释	示例
+✅ 有图结构	有节点和边，可以定义邻接关系	网格、图、二维地图、状态转移图
+✅ 每个边或节点有“代价”	可以是时间、高度、能量、风险等	高度 grid[i][j]、移动耗费
+✅ 代价是非负且单调	不会出现“负回报”	移动只会花费时间、增加风险
+✅ 想求某种“最小代价”	目标是求最小路径代价或最早可达时间	最短路径、最早抵达、最低风险路线
+✅ 状态可以逐步扩展	当前最优状态可以推进到新状态	BFS、堆优化 BFS、最短路问题
+🚀 三、常见的 Dijkstra 变体类型
+
+下面我给你列出几类常见的变体类型👇
+
+1️⃣ 最小路径和类
+
+目标：从起点到终点，代价和最小
+这是 Dijkstra 的标准用途。
+
+📘 示例：
+
+LeetCode 743. 网络延迟时间
+
+LeetCode 1631. 最小体力消耗路径（边权 = 高度差）
+
+LeetCode 505. 迷宫 II
+
+任意 “加权图最短路径” 问题
+
+2️⃣ 最小化路径上最大值
+
+目标：路径上最大边权最小化
+即这条路径上最“难走”的一段尽可能容易。
+
+📘 示例：
+
+LeetCode 778. Swim in Rising Water（游泳的最少时间）
+
+路径代价 = max(经过的格子高度)
+
+LeetCode 1102. Path With Maximum Minimum Value（最大化路径上最小值）
+
+📖 思想：
+
+Dijkstra 把 “代价和” 替换为 “代价 max/min”
+
+每次从堆中取出当前“最好（最小或最大）”的节点继续扩展。
+
+3️⃣ 最早可达类（动态传播）
+
+目标：找出在时间、能量、传播速率上的 最早/最短到达时间。
+
+📘 示例：
+
+信号传播问题（例如网络延迟）
+
+病毒/火焰蔓延问题（传播时间最短）
+
+LeetCode 1368. 使网格图至少代价路径（转弯代价）
+
+📖 思想：
+
+每个节点的“到达时间”不断被更新。
+
+当前堆顶的时间最小，即当前最早能扩展的节点。
+
+4️⃣ 多状态最短路类
+
+目标：节点状态不仅有位置，还有附加维度（例如方向、背包、能量）。
+
+📘 示例：
+
+LeetCode 864. 获取所有钥匙的最短路径
+
+状态 = (位置, 已获得钥匙集合)
+
+LeetCode 847. 访问所有节点的最短路径
+
+状态 = (节点编号, 访问状态mask)
+
+📖 思想：
+
+状态空间仍然是图。
+
+每个状态的代价是最小步数/时间。
+
+依然可用堆扩展“最优状态”。
+
+5️⃣ 风险/概率类
+
+目标：最小化风险，或者最大化成功概率。
+
+📘 示例：
+
+LeetCode 1514. Path with Maximum Probability
+
+每条边有概率 p
+想找从 start 到 end 的最大乘积概率路径
+取 log 后变为最小化和：-log(p)，可直接 Dijkstra
+
+6️⃣ 特殊约束路径
+
+目标：仍然是最小代价，但路径受某些条件限制（比如转弯次数、能量上限）
+
+📘 示例：
+
+LeetCode 1928. Minimum Cost to Reach Destination in Time
+
+限制“时间 ≤ T”
+状态变成 (节点, 时间)
+仍可用堆扩展最优状态
+
+堆解法(Dijkstra解法)的代码如下：
+```cpp
+class Solution {
+public:
+    int swimInWater(vector<vector<int>>& grid) {
+        int n = grid.size();
+        const int dir[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};
+        vector<bool> visited(n*n,false);
+        using Node = pair<int,int>; //当前代价，位置
+        auto gt = [](const Node &a, const Node &b){
+            return a.first>b.first;
+        };
+        priority_queue<Node,vector<Node>,decltype(gt)> pq;
+        pq.push({grid[0][0],0});
+        visited[0] = true;
+        while(!pq.empty())
+        {
+            auto [cost, pos] = pq.top();
+            if(pos==n*n-1)
+                return cost;
+            pq.pop();
+            for(int i=0;i<4;i++)
+            {
+                int nx=pos/n+dir[i][0],ny=pos%n+dir[i][1];
+                if(nx>=0 && nx<n && ny>=0 && ny<n && !visited[nx*n+ny])
+                {
+                    int newcost = max(cost,grid[nx][ny]);
+                    pq.push({newcost,nx*n+ny});
+                    visited[nx*n+ny] = true;
+                }
+            }
+        }
+        return 0;
+    }
+};
+```
+
+这道题也可以暴力搜索+二分查找的方法，二分查找所需要的水位高度，每次用BFS/DFS暴力搜索即可。
+
+此外，由于每个节点对应的高度值不一样，这道题也可以并查集的方法进行解决。
+
+并查集，简单来说就是支持合并和查找两个快速操作的集合，可以视作一种森林，只需要维护以下数组：
+parent/pre[i] 表示下标为i的节点的前驱。
+
+这样，当两个节点相互合并时，就可以把其中一个的递归的前驱(也被称为这个集合的代表元素)绑定为另一个的代表元素即可完成合并。
+
+然而，这样当树的高度太高时可能导致效率变低，因此可以采用路径压缩的方法，在递归查找到树的根节点时，可以将每一个路径上的点的前驱动态更新为根节点，这样就可以优化之后查找的速度。
+
+同时，可以定义一个rank，初始为0，当两个rank相同的集合合并时任取一个rank+1并将另外一个挂载在这个集合上，而其余情况则将rank小的集合挂载在rank大的集合上，这样可以保证更小的集合被挂载在更大的集合上从而提高之后路径压缩的效率。
+
+并查集的一种标准实现如下：
+
+```cpp
+    class UnionFind{
+        public:
+            vector<int> parent;
+            vector<int> rank;
+            UnionFind(int n) {
+                parent = vector<int>(n,0);
+                rank = vector<int>(n,0);
+                iota(parent.begin(),parent.end(),0);
+            }
+
+            int find(int k) {
+                if(parent[k]==k)
+                    return k;
+                parent[k] = find(parent[k]);
+                return parent[k];
+            }
+
+            void join(int a, int b) {
+                a = find(a);
+                b = find(b);
+                if(a == b)
+                    return;
+                if(rank[a]>rank[b])
+                    parent[b] = a;
+                else if(rank[a]<rank[b])
+                    parent[a] = b;
+                else
+                {
+                    parent[b] = a;
+                    rank[a]++;
+                }
+                return;
+            }
+
+            bool connected(int a, int b)
+            {
+                return (find(a)==find(b));
+            }
+    };
+```
+
+在这道题目里，可以将能够互相到达的集合视作一个并查集。当水位上涨时，由于每个水位高度唯一对应一个节点，只需要更新该节点周围的边即可，将其周围可达的节点加入这个节点之中。我们在每次更新后检查起始和终结两个节点是否在同一个并查集中即可。
+
+实现代码如下:
+
+```cpp
+    int swimInWater(vector<vector<int>>& grid) {
+        int n = grid.size();
+        UnionFind uf = UnionFind(n*n);
+        vector<int> idx = vector<int>(n*n,0);
+        const int dir[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};
+        for(int i=0;i<n;i++)
+        {
+            for(int j=0;j<n;j++)
+            {
+                idx[grid[i][j]] = i*n+j;  //这个值对应的位置
+            }
+        }
+        for(int water = 0; water<n*n; water++) //逐个更新，因为每次水位上涨1只会增加对应水位的边
+        {
+            int x = idx[water]/n, y = idx[water]%n;
+            for(int i=0;i<4;i++)
+            {
+                int nx = x+dir[i][0], ny = y+dir[i][1];
+                if(nx>=0 && nx<n && ny>=0 && ny<n && grid[nx][ny]<water)
+                    uf.join(x*n+y,nx*n+ny);
+            }
+            if(uf.connected(0,n*n-1))
+                return water;
+        }
+        return 0;
+    }
+```
+
+## Leetcode 1488 避免洪水泛滥 && 有序集合set和map
+
+这道题需要我们贪心地找到所有在洪水泛滥之前可以抽空的天数，并将这一天拿来抽水。可以将所有的不下雨（可用于抽水的天数）的日子都利用一个有序的集合Set进行排序，再利用其lower_bound和upper_bound等接口实现贪心查找即可。
+
+Set和Map是C++容器中一类拥有自动排序功能（但不能拥有重复元素），其主要用到的接口和其他访问数据的结构类似：
+
+```cpp
+std::set
+begin() end()  rbegin() rend()
+empty() size()  max_size() clear()
+insert(value) emplace(args...) erase(it/key)
+find(key) count(key) lower_bound(key) upper_bound(key)
+equal_range(key) //返回一个{lower_bound,upperbound} pair
+swap(other) 
+key_comp() //返回用于排序 key 的比较函数
+value_comp() //返回用于排序 value 的比较函数
+```
+
+```cpp
+std::map
+operator[](key) at(key) //若不存在，报异常
+insert({key, value})  emplace(key, value)
+
+```
+
+关键点在于，set可以通过lower_bound和upper_bound以及find实现堆某个元素的高效精确/模糊查找（由于set和map底层是红黑树实现的，时间复杂度为O(logn)
+
+multiset和multimap是和set/map的可重复元素版本，也位于头文件\<set\>和\<map\>之中。
+
+## Leetcode 2 两数相加 && 链表
+
+本质上就是一个模拟竖式相加的过程，本质上就是考虑每一位是否有进位，由于加法的进位不会传递两次，只需要每次分别判定即可。
+
+链表可以用一个链表指针next快速指向下一个节点，因此顺序访问速度很快。
+
+## Leetcode 2300 咒语和药水的成功对数
+
+本质上，这道题是需要你进行一次排序，然后对每个对应的spells值找出其在vector中的相对顺位。这个过程可以通过迭代器之间的计算轻松完成。利用lower_bound函数返回迭代器，然后再利用迭代器的运算即可求出对应的位置。
+
+## Leetcode 3494 酿造药水需要的最少总时间 && 流水线DP
+
+这道题需要我们按照流水线处理一些任务，但这些任务之间必须连续完成，因此和传统的流水线不完全一样。
+
+对每个问题而言，它可以开始执行的时间为$$max(这一轮上个任务完成的最早时间，这个流水线空缺出来的最早时间)$$
+
+因此我们需要一个endTime数组来记录上一轮的这个任务什么时候结束
+
+而对于每一次执行的过程而言，可以利用一个cur表示当前已经执行的时间，利用上述逻辑对这个任务所需要的最短时间进行更新。
+
+最终，我们确定了最终更新的时间以后再把时间反向推回去即可。
+
+完整代码如下：
+
+```cpp
+class Solution {
+public:
+    long long minTime(vector<int>& skill, vector<int>& mana) {
+        using ll = long long;
+        int n = skill.size();
+        vector<ll> endTime = vector<ll>(n,0); //上次工作完成的时间
+        for(int i=0;i<mana.size();i++)
+        {
+            ll cur = 0;
+            for(int j=0;j<n;j++)
+            {
+                cur = max(cur,endTime[j]) + 1LL * skill[j]* mana[i];
+            }
+            endTime[n-1] = cur;
+            for(int k=n-2;k>=0;k--)
+                endTime[k] = endTime[k+1] - 1LL * skill[k+1] * mana[i];
+        }
+
+        return endTime[n-1];
+    }
+};
+```
+
+## Leetcode 3147 从魔法师身上吸取的最大能量
+
+这道题需要我们求从某个点开始往后间隔为k的序列之和的最大值，由于每k个元素在序列中就会重复在下一个序列中出现一次，因此可以对每个点求后缀和，从后往前寻找最大值即可。
+
+## Leetcode 3186 施咒的最大总伤害
+
+其实这道题本质上就是一个银行打劫问题，被打劫的隔壁的银行不能再次被打劫，这样可以用动态规划来处理这个问题。由于Power的取值很大，不可能对每一个power值进行动态规划，对已有的power值进行统计即可。可以用vector排序之后查找即可。
+
+## Leetcode 3539 魔法序列的数组乘积之和 && 取模运算 && 快速幂 && 数组乘积之和 && 状态DP/剪枝 
+
+这道题相当困难，需要把问题仔细拆解并分析，所以慢慢来，一次把一个问题解决好。
+
+
+
+## Leetcode 2273 移除字母异位词后的结果数组
+
+只需要按顺序删除即可，判断字母异位词可以用数组/hashmap或直接判断（由于字符串长度很短）
+
+## Leetcode 3349 检测相邻递增子数组I && Leetcode 3350 检测相邻递增子数组II
+
+这两道题的解法完全一样，只需要求相邻递增子数组的最大长度即可。作为相邻递增子数组有以下两种可能：两个相邻的子数组是接续的，这样相邻子数组的长度为子数组长度的一半向下取整；要么两个相邻的子数组不是接续的，长度为两个相邻递增子数组长度之中更小的那个。
